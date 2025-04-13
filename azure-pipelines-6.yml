@@ -7,37 +7,67 @@ trigger:
 - main
 
 pool:
-  name: Default
+  name: Default  # Self-hosted agent
 
 variables:
   projectPath: '**/Group16-COMP367Project.csproj'
   buildConfiguration: 'Release'
 
 steps:
+# ✅ Step 1: Restore packages
 - task: DotNetCoreCLI@2
-  displayName: 'Restore'
+  displayName: 'Restore NuGet Packages'
   inputs:
     command: 'restore'
     projects: '$(projectPath)'
 
+# ✅ Step 2: Build with Roslyn Analyzers
 - task: DotNetCoreCLI@2
-  displayName: 'Build with Roslyn Analyzers'
+  displayName: 'Build Project with Roslyn Analyzers'
   inputs:
     command: 'build'
     projects: '$(projectPath)'
     arguments: '--configuration $(buildConfiguration) /p:ReportAnalyzer=true'
 
+# ✅ Step 3: Run Unit Tests and Generate Code Coverage (with correct results directory)
 - task: DotNetCoreCLI@2
   displayName: 'Run Unit Tests with Code Coverage'
   inputs:
     command: 'test'
     projects: '$(projectPath)'
-    arguments: '--configuration $(buildConfiguration) --collect:"XPlat Code Coverage" --logger trx'
+    arguments: '--configuration $(buildConfiguration) --collect:"XPlat Code Coverage" --logger trx --results-directory $(Build.SourcesDirectory)/TestResults'
     publishTestResults: true
 
-- task: PublishCodeCoverageResults@1
-  displayName: 'Publish Code Coverage Report'
+# ✅ Step 4: Show structure of TestResults folder (debug step)
+- task: PowerShell@2
+  displayName: 'DEBUG: List TestResults Folder'
   inputs:
-    codeCoverageTool: 'cobertura'
-    summaryFileLocation: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
-    reportDirectory: '$(Agent.TempDirectory)'
+    targetType: 'inline'
+    script: |
+      $resultsDir = "$(Build.SourcesDirectory)\TestResults"
+      if (Test-Path $resultsDir) {
+        Write-Host "`n📁 Contents of TestResults folder:"
+        Get-ChildItem -Path $resultsDir -Recurse | Select-Object FullName
+      } else {
+        Write-Host "❌ TestResults folder not found!"
+      }
+
+# ✅ Step 5: Copy coverage file to Downloads and print it to logs
+- task: PowerShell@2
+  displayName: 'Copy & Print Code Coverage File from Downloads Folder'
+  inputs:
+    targetType: 'inline'
+    script: |
+      $sourceFile = Get-ChildItem -Path "$(Build.SourcesDirectory)\TestResults" -Recurse -Filter "coverage.cobertura.xml" | Select-Object -First 1
+      $downloadsPath = "$env:USERPROFILE\Downloads\coverage.cobertura.xml"
+
+      if ($sourceFile) {
+        Copy-Item -Path $sourceFile.FullName -Destination $downloadsPath -Force
+        Write-Host "✅ Copied to Downloads: $downloadsPath"
+
+        Write-Host "`n==================== 📊 CODE COVERAGE REPORT (FROM DOWNLOADS) ===================="
+        Get-Content $downloadsPath
+        Write-Host "`n==================================================================================="
+      } else {
+        Write-Host "❌ coverage.cobertura.xml not found in TestResults folder."
+      }
