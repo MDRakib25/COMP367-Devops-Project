@@ -1,0 +1,52 @@
+# ASP.NET Core (.NET Framework)
+# Build and test ASP.NET Core projects targeting the full .NET Framework.
+# Add steps that publish symbols, save build artifacts, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
+
+trigger:
+- main
+
+pool:
+  name: Default  # Your self-hosted agent
+
+variables:
+  projectPath: '**/Group16-COMP367Project.csproj'
+  buildConfiguration: 'Release'
+
+steps:
+- task: DotNetCoreCLI@2
+  displayName: 'Restore NuGet Packages'
+  inputs:
+    command: 'restore'
+    projects: '$(projectPath)'
+
+- task: DotNetCoreCLI@2
+  displayName: 'Build Project with Roslyn Analyzers'
+  inputs:
+    command: 'build'
+    projects: '$(projectPath)'
+    arguments: '--configuration $(buildConfiguration) /p:ReportAnalyzer=true'
+
+- task: DotNetCoreCLI@2
+  displayName: 'Run Unit Tests with Code Coverage'
+  inputs:
+    command: 'test'
+    projects: '$(projectPath)'
+    arguments: '--configuration $(buildConfiguration) --collect:"XPlat Code Coverage" --logger trx'
+    publishTestResults: true
+
+# ✅ Print the coverage XML into the logs
+- task: PowerShell@2
+  displayName: 'Print Code Coverage File to Logs'
+  inputs:
+    targetType: 'inline'
+    script: |
+      Write-Host "🔍 Searching for coverage.cobertura.xml..."
+      $coverageFile = Get-ChildItem -Path "$(Agent.TempDirectory)" -Recurse -Filter "coverage.cobertura.xml" | Select-Object -First 1
+      if ($coverageFile) {
+        Write-Host "`n==================== 📊 CODE COVERAGE (Raw XML) ===================="
+        Get-Content $coverageFile.FullName
+        Write-Host "`n====================================================================="
+      } else {
+        Write-Host "❌ coverage.cobertura.xml not found."
+      }
