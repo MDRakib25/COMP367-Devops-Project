@@ -1,0 +1,67 @@
+﻿@{
+    ViewData["Title"] = "Nurse Dashboard";
+    var patients = new List<(string Username, string Id)> {
+        ("john_doe", "1"),
+        ("jane_smith", "2"),
+        ("mark_johnson", "3")
+    };
+
+    //patient table information
+    var notifications = new List<string> {
+        "Patient jane_smith has a new alert.",
+        "Vitals update needed for john_doe.",
+        "mark_johnson missed a medication log."
+    };
+}
+
+<div class="container mt-5">
+    <div class="card shadow p-4 mb-4">
+        <h1 class="text-center mb-4 text-primary">👩‍⚕️ Nurse Dashboard</h1>
+
+        <div class="d-flex justify-content-center gap-3 mb-4">
+            <button class="btn btn-success btn-lg shadow-sm">
+                💌 Send Daily Motivational Speech
+            </button>
+            <button class="btn btn-warning btn-lg shadow-sm">
+                🚨 Incoming Alerts
+            </button>
+        </div>
+    </div>
+
+    <div class="card shadow p-4 mb-4">
+        <h3 class="mb-3 text-secondary">📝 Patient List</h3>
+        <table class="table table-hover table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th>Username</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var patient in patients)
+                {
+                    <tr>
+                        <td>
+                            <a href="/Patient/Details/@patient.Id" class="fw-bold text-decoration-none text-primary">
+                                @patient.Username
+                            </a>
+                        </td>
+                        <td>
+                            <a href="/Patient/Details/@patient.Id" class="btn btn-outline-info btn-sm">View Details</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card shadow p-4">
+        <h3 class="mb-3 text-secondary">🔔 Incoming Notifications</h3>
+        @foreach (var note in notifications)
+        {
+            <div class="alert alert-info d-flex align-items-center gap-2" role="alert">
+                <span>📢</span> @note
+            </div>
+        }
+    </div>
+</div>

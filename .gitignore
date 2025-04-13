@@ -1,0 +1,40 @@
+## Ignore Visual Studio + .NET junk
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Build results
+bin/
+obj/
+
+## ASP.NET stuff
+node_modules/
+bower_components/
+secrets.json
+
+## Logs & temp
+*.log
+*.tlog
+*.tmp
+*.bak
+
+## Coverage & test output
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+
+## Rider / ReSharper
+.idea/
+*.DotSettings.user
+_ReSharper*/
+
+## System files
+Thumbs.db
+.DS_Store
+
+## NuGet
+*.nupkg
+packages/

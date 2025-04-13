@@ -1,0 +1,36 @@
+﻿@{
+    ViewData["Title"] = "Login Page";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<div class="form-container" style="max-width: 400px; margin: 0 auto;">
+    <form onsubmit="return login()">
+        <div class="form-group">
+            <label for="username">Username or Email</label>
+            <input type="text" class="form-control" id="username" placeholder="Enter username or email" />
+        </div>
+
+        <div class="form-group" style="margin-top: 10px;">
+            <label for="password">Password</label>
+            <input type="password" class="form-control" id="password" placeholder="Enter password" />
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="margin-top: 15px;">Login</button>
+    </form>
+
+    <p style="margin-top: 20px;">
+        Don't have an account?
+        <a asp-controller="Account" asp-action="Register">Register here</a>
+    </p>
+</div>
+
+@section Scripts {
+    <script>
+        function login() {
+            alert("Login successful!");
+            window.location.href = "/Home/Index";
+            return false;
+        }
+    </script>
+}
