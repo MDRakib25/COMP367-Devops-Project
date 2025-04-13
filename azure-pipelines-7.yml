@@ -1,0 +1,51 @@
+# ASP.NET Core (.NET Framework)
+# Build and test ASP.NET Core projects targeting the full .NET Framework.
+# Add steps that publish symbols, save build artifacts, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
+
+trigger:
+- main
+
+pool:
+  name: Default
+
+variables:
+  projectPath: '**/Group16-COMP367Project.csproj'
+  buildConfiguration: 'Release'
+
+steps:
+- task: DotNetCoreCLI@2
+  displayName: 'Restore'
+  inputs:
+    command: 'restore'
+    projects: '$(projectPath)'
+
+- task: DotNetCoreCLI@2
+  displayName: 'Build with Roslyn Analyzers'
+  inputs:
+    command: 'build'
+    projects: '$(projectPath)'
+    arguments: '--configuration $(buildConfiguration) /p:ReportAnalyzer=true'
+
+- task: DotNetCoreCLI@2
+  displayName: 'Run Unit Tests with Code Coverage'
+  inputs:
+    command: 'test'
+    projects: '$(projectPath)'
+    arguments: '--configuration $(buildConfiguration) --collect:"XPlat Code Coverage" --logger trx'
+    publishTestResults: true
+
+# ✅ This step shows coverage file content directly in the logs
+- script: |
+    echo "Searching for coverage.cobertura.xml..."
+    $coverageFile = Get-ChildItem -Path "$(Agent.TempDirectory)" -Recurse -Filter "coverage.cobertura.xml" | Select-Object -First 1
+    if ($coverageFile) {
+      Write-Host "`n==================== CODE COVERAGE (Raw XML) ===================="
+      Get-Content $coverageFile.FullName
+      Write-Host "`n==============================================================="
+    } else {
+      Write-Host "❌ coverage.cobertura.xml not found."
+    }
+  displayName: 'Print Code Coverage File to Logs'
+  shell: powershell
+
