@@ -7,7 +7,7 @@ trigger:
 - main
 
 pool:
-  name: Default  # Your self-hosted agent
+  name: Default  # Using your self-hosted agent
 
 variables:
   projectPath: '**/Group16-COMP367Project.csproj'
@@ -35,7 +35,16 @@ steps:
     arguments: '--configuration $(buildConfiguration) --collect:"XPlat Code Coverage" --logger trx'
     publishTestResults: true
 
-# ✅ Print the coverage XML into the logs
+# 🔍 Debug: List all files to locate the coverage report
+- task: PowerShell@2
+  displayName: 'Debug: List All Files in Temp Directory'
+  inputs:
+    targetType: 'inline'
+    script: |
+      Write-Host "📂 Listing all files under $(Agent.TempDirectory)..."
+      Get-ChildItem -Path "$(Agent.TempDirectory)" -Recurse | Select-Object FullName
+
+# 📊 Print the coverage report XML inline in logs
 - task: PowerShell@2
   displayName: 'Print Code Coverage File to Logs'
   inputs:
@@ -44,9 +53,9 @@ steps:
       Write-Host "🔍 Searching for coverage.cobertura.xml..."
       $coverageFile = Get-ChildItem -Path "$(Agent.TempDirectory)" -Recurse -Filter "coverage.cobertura.xml" | Select-Object -First 1
       if ($coverageFile) {
-        Write-Host "`n==================== 📊 CODE COVERAGE (Raw XML) ===================="
+        Write-Host "`n==================== 📊 CODE COVERAGE REPORT ===================="
         Get-Content $coverageFile.FullName
-        Write-Host "`n====================================================================="
+        Write-Host "`n=================================================================="
       } else {
-        Write-Host "❌ coverage.cobertura.xml not found."
+        Write-Host "❌ coverage.cobertura.xml not found. Make sure a test actually ran."
       }
